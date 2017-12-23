@@ -1,0 +1,19 @@
+{
+  "name": "muriel",
+  "version": "1.0.0",
+  "description": "Create slitscan murals",
+  "main": "index.js",
+  "bin": {
+    "muriel": "./cli.js"
+  },
+  "repository": "https://github.com/gimlids/muriel",
+  "author": "David Stolarsky <david.stolarsky@gmail.com>",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "async": "^2.6.0",
+    "sharp": "^0.18.4",
+    "sprintf-js": "^1.1.1",
+    "yargs": "^10.0.3"
+  }
+}
