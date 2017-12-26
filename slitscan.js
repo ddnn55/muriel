@@ -3,7 +3,7 @@ const sharp = require('sharp');
 const path = require('path');
 const sprintf = require('sprintf-js').sprintf;
 
-module.exports = ({ imagePaths, outputDir }) => {
+module.exports = ({ imagePaths, outputDir, step }) => {
 
       let height;
       let tileWidth;
@@ -11,7 +11,7 @@ module.exports = ({ imagePaths, outputDir }) => {
       let tileImage;
       let extractColumn;
       
-      let slitWidth = 20;
+      let slitWidth = step;
 
       const copyNextSlitToMural = image => new Promise((resolve, reject) => {
             
@@ -86,7 +86,7 @@ module.exports = ({ imagePaths, outputDir }) => {
                         // console.log(metadata.height);
                         if(!height) {
                               height = metadata.height;
-                              tileWidth = height;
+                              tileWidth = Math.ceil(height / slitWidth) * slitWidth;
                               // tileWidth = 50;
                               // extractColumn = Math.round(metadata.width / 2);
                               extractColumn = 0;
