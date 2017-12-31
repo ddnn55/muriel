@@ -12,6 +12,7 @@
   "private": false,
   "dependencies": {
     "async": "^2.6.0",
+    "recursive-readdir": "^2.2.1",
     "sharp": "^0.18.4",
     "sprintf-js": "^1.1.1",
     "yargs": "^10.0.3"

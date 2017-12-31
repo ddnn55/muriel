@@ -13,6 +13,23 @@ module.exports = ({ imagePaths, outputDir, step }) => {
       
       let slitWidth = step;
 
+      let lastIndexSaved = -1;
+      const saveNextTileImage = () => {
+            const tileIndex = ++lastIndexSaved;
+            const outputPath = path.join(outputDir, sprintf('tile-%05d.png', tileIndex));
+            
+            tileImage
+                  .toFile(outputPath, (err, info) => {
+                        if(err) {
+                              console.error('toFile errored: ', err);
+                              reject(err);
+                        }
+                        else {
+                              console.log('Saved ' + outputPath);
+                        }
+                  });
+      };
+
       const copyNextSlitToMural = image => new Promise((resolve, reject) => {
             
             const muralColumn = slitIndex * slitWidth;
@@ -22,19 +39,7 @@ module.exports = ({ imagePaths, outputDir, step }) => {
             if(tileColumn === 0) {
                   // save current tile if exists
                   if(slitIndex !== 0) {
-                        const tileIndex = muralColumn / tileWidth;
-                        const outputPath = path.join(outputDir, sprintf('tile-%05d.png', tileIndex));
-                        
-                        tileImage
-                              .toFile(outputPath, (err, info) => {
-                                    if(err) {
-                                          console.error('toFile errored: ', err);
-                                          reject(err);
-                                    }
-                                    else {
-                                          console.log('Saved ' + outputPath);
-                                    }
-                              });
+                        saveNextTileImage();
                   }
                   
                   // create new tile
@@ -105,7 +110,7 @@ module.exports = ({ imagePaths, outputDir, step }) => {
                         callback();
                   });
       }, err => {
-
+            saveNextTileImage();
       });
 };
 
