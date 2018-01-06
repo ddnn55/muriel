@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 
-import argparse, sys, os, math
+import argparse, sys, os, math, av
 from PIL import Image
 
 class Slitscan():
 
-    def __init__(self, image_paths, output_dir, step):
-        self.image_paths = image_paths
+    def __init__(self, images, output_dir, step, rotation):
+        self.images = images
         self.output_dir = output_dir
         self.step = step
+        self.rotation = rotation
 
         self.height = None
         self.tile_width = None
@@ -55,8 +56,13 @@ class Slitscan():
 
 
     def run(self):
-        for image_path in image_paths:
-            image = Image.open(image_path)
+        for image in self.images:
+            # print str(image.width) + ' x ' + str(image.height)
+            if self.rotation != 0:
+                image = image.rotate(self.rotation, expand=True)
+                # print "rotated to"
+                # print str(image.width) + ' x ' + str(image.height)
+            # image = Image.open(image_path)
             if self.height == None:
                     self.height = image.height
                     self.tile_width = int(math.ceil(self.height / self.slit_width) * self.slit_width)
@@ -69,27 +75,39 @@ class Slitscan():
 
         self.save_next_tile_image()
 
+def frames(video_path):
+    container = av.open(video_path)
+
+    for frame in container.decode(video=0):
+        yield frame.to_image()
+
 if __name__ == '__main__':
     parser=argparse.ArgumentParser()
     
-    parser.add_argument('--input-images-path', help='Path to directory of video frame images to slitscan')
+    parser.add_argument('--input', help='Video to slitscan')
     parser.add_argument('--output', help='Directory to which slitscan tiles will be written')
     parser.add_argument('--step', help='Pixel width of the scan. Try 1 or slightly more.')
+    parser.add_argument('--rotate', help='Rotate image by a multiple of 90. Handy because we may not recognize orientation metadata.', default=0)
 
     args=parser.parse_args()
+
+    print args
 
     step = int(args.step)
 
     # print args
 
-    image_paths = []
-    for root, directories, filenames in os.walk(args.input_images_path):
-        for filename in filenames: 
-            if filename[0] != '.':
-                image_paths.append(os.path.join(root, filename))
+    # image_paths = []
+    # for root, directories, filenames in os.walk(args.input_images_path):
+    #     for filename in filenames: 
+    #         if filename[0] != '.':
+    #             image_paths.append(os.path.join(root, filename))
 
-    image_paths.sort()
+    # image_paths.sort()
     # print "\n".join(image_paths)
 
-    scanner = Slitscan(image_paths, args.output, step)
+    video_frames = frames(args.input)
+
+    # scanner = Slitscan(image_paths, args.output, step)
+    scanner = Slitscan(video_frames, args.output, step, int(args.rotate))
     scanner.run()
