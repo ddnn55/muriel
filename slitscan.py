@@ -25,11 +25,12 @@ def mkdirp(newdir):
 
 class Slitscan():
 
-    def __init__(self, images, output_dir, step, rotation):
+    def __init__(self, images, output_dir, step, rotation, direction):
         self.images = images
         self.output_dir = output_dir
         self.step = step
         self.rotation = rotation
+        self.direction = direction
 
         self.height = None
         self.tile_width = None
@@ -47,6 +48,9 @@ class Slitscan():
             self.output_dir,
             'tile-%05d.png' % self.tile_index
         )
+
+        if self.direction == "rtl":
+            self.tile_image = self.tile_image.transpose(Image.FLIP_LEFT_RIGHT)
 
         self.tile_image.save(output_path)
         print('Saved ' + output_path)
@@ -71,6 +75,8 @@ class Slitscan():
             self.extract_column + self.slit_width,
             self.height
         ))
+        if self.direction == "rtl":
+            band = band.transpose(Image.FLIP_LEFT_RIGHT)
         self.tile_image.paste(band, (tile_column, 0))
         # print('pasting to ', {tile_column})
 
@@ -110,6 +116,7 @@ if __name__ == '__main__':
     parser.add_argument('--output', help='Directory to which slitscan tiles will be written')
     parser.add_argument('--step', help='Pixel width of the scan. Try 1 or slightly more.')
     parser.add_argument('--rotate', help='Rotate image by a multiple of 90. Handy because we may not recognize orientation metadata.', default=0)
+    parser.add_argument('--direction', help='Either "ltr" or "rtl", i.e. left to right, or right to left. Default is "ltr".', default="ltr")
 
     args=parser.parse_args()
 
@@ -131,5 +138,5 @@ if __name__ == '__main__':
     video_frames = frames(args.input)
 
     # scanner = Slitscan(image_paths, args.output, step)
-    scanner = Slitscan(video_frames, args.output, step, int(args.rotate))
+    scanner = Slitscan(video_frames, args.output, step, int(args.rotate), args.direction)
     scanner.run()
