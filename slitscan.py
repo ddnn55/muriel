@@ -3,6 +3,26 @@
 import argparse, sys, os, math, av
 from PIL import Image
 
+# from http://code.activestate.com/recipes/82465-a-friendly-mkdir/
+def mkdirp(newdir):
+    """works the way a good mkdir should :)
+        - already exists, silently complete
+        - regular file in the way, raise an exception
+        - parent directory(ies) does not exist, make them as well
+    """
+    if os.path.isdir(newdir):
+        pass
+    elif os.path.isfile(newdir):
+        raise OSError("a file with the same name as the desired " \
+                      "dir, '%s', already exists." % newdir)
+    else:
+        head, tail = os.path.split(newdir)
+        if head and not os.path.isdir(head):
+            _mkdir(head)
+        #print "_mkdir %s" % repr(newdir)
+        if tail:
+            os.mkdir(newdir)
+
 class Slitscan():
 
     def __init__(self, images, output_dir, step, rotation):
@@ -18,6 +38,8 @@ class Slitscan():
         self.extract_column = None
         self.slit_width = step
         self.last_index_saved = -1
+
+        mkdirp(self.output_dir)
     
     def save_next_tile_image(self):
         self.tile_index = self.last_index_saved + 1
