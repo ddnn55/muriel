@@ -40,6 +40,8 @@ class Slitscan():
         self.slit_width = step
         self.last_index_saved = -1
 
+        self.current_tile_paste_count = 0
+
         mkdirp(self.output_dir)
     
     def save_next_tile_image(self):
@@ -48,6 +50,9 @@ class Slitscan():
             self.output_dir,
             'tile-%05d.png' % self.tile_index
         )
+
+        if self.current_tile_paste_count * self.slit_width != self.tile_width:
+            self.tile_image = self.tile_image.crop(box=(0, 0, self.current_tile_paste_count * self.slit_width, self.height))
 
         if self.direction == "rtl":
             self.tile_image = self.tile_image.transpose(Image.FLIP_LEFT_RIGHT)
@@ -68,6 +73,7 @@ class Slitscan():
 
             # create new tile
             self.tile_image = Image.new('RGB', (self.tile_width, self.height), (0, 0, 0))
+            self.current_tile_paste_count = 0
         
         band = image.crop((
             self.extract_column,
@@ -78,6 +84,7 @@ class Slitscan():
         if self.direction == "rtl":
             band = band.transpose(Image.FLIP_LEFT_RIGHT)
         self.tile_image.paste(band, (tile_column, 0))
+        self.current_tile_paste_count = self.current_tile_paste_count + 1
         # print('pasting to ', {tile_column})
 
         self.slit_index = self.slit_index + 1
