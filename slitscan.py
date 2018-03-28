@@ -3,6 +3,9 @@
 import argparse, sys, os, math, av
 from PIL import Image
 
+import base64
+import cStringIO
+
 # from http://code.activestate.com/recipes/82465-a-friendly-mkdir/
 def mkdirp(newdir):
     """works the way a good mkdir should :)
@@ -25,12 +28,13 @@ def mkdirp(newdir):
 
 class Slitscan():
 
-    def __init__(self, images, output_dir, step, rotation, direction):
+    def __init__(self, images, output_dir, step, rotation, direction, stdout):
         self.images = images
         self.output_dir = output_dir
         self.step = step
         self.rotation = rotation
         self.direction = direction
+        self.stdout = stdout
 
         self.height = None
         self.tile_width = None
@@ -66,7 +70,7 @@ class Slitscan():
         tile_column = mural_column % self.tile_width
         print(str(tile_column) + ' / ' + str(self.tile_width))
 
-        if tile_column == 0:
+        if tile_column == 0 and not self.stdout:
             # save current tile if exists
             if self.slit_index != 0:
                 self.save_next_tile_image()
@@ -83,9 +87,15 @@ class Slitscan():
         ))
         if self.direction == "rtl":
             band = band.transpose(Image.FLIP_LEFT_RIGHT)
-        self.tile_image.paste(band, (tile_column, 0))
-        self.current_tile_paste_count = self.current_tile_paste_count + 1
-        # print('pasting to ', {tile_column})
+        if self.stdout:
+            buffer = cStringIO.StringIO()
+            band.save(buffer, format="PNG")
+            band_str = base64.b64encode(buffer.getvalue())
+            print band_str
+        else:
+            self.tile_image.paste(band, (tile_column, 0))
+            self.current_tile_paste_count = self.current_tile_paste_count + 1
+            # print('pasting to ', {tile_column})
 
         self.slit_index = self.slit_index + 1
 
@@ -124,6 +134,7 @@ if __name__ == '__main__':
     parser.add_argument('--step', help='Pixel width of the scan. Try 1 or slightly more.')
     parser.add_argument('--rotate', help='Rotate image by a multiple of 90. Handy because we may not recognize orientation metadata.', default=0)
     parser.add_argument('--direction', help='Either "ltr" or "rtl", i.e. left to right, or right to left. Default is "ltr".', default="ltr")
+    parser.add_argument('--stdout', nargs='?', const=True, default=False, help='Instead of saving square tiles to --output, print one base64 PNG band per line to stdout.')
 
     args=parser.parse_args()
 
@@ -145,5 +156,5 @@ if __name__ == '__main__':
     video_frames = frames(args.input)
 
     # scanner = Slitscan(image_paths, args.output, step)
-    scanner = Slitscan(video_frames, args.output, step, int(args.rotate), args.direction)
+    scanner = Slitscan(video_frames, args.output, step, int(args.rotate), args.direction, args.stdout)
     scanner.run()
